@@ -1,0 +1,19 @@
+const products=[
+{id:1,name:'Nova Wireless Headphones',cat:'Electronics',price:2499,rating:4.8,icon:'🎧'},
+{id:2,name:'Smart Watch Pro',cat:'Electronics',price:3299,rating:4.7,icon:'⌚'},
+{id:3,name:'Everyday Sneakers',cat:'Fashion',price:1899,rating:4.6,icon:'👟'},
+{id:4,name:'Minimal Backpack',cat:'Fashion',price:1299,rating:4.5,icon:'🎒'},
+{id:5,name:'Portable Speaker',cat:'Electronics',price:1599,rating:4.7,icon:'🔊'},
+{id:6,name:'Desk Lamp',cat:'Home',price:899,rating:4.4,icon:'💡'},
+{id:7,name:'Coffee Maker',cat:'Home',price:2199,rating:4.6,icon:'☕'},
+{id:8,name:'Fitness Bottle',cat:'Sports',price:699,rating:4.3,icon:'🥤'}];
+let cart=JSON.parse(localStorage.getItem('novamart-cart')||'[]');let category='All';
+const $=id=>document.getElementById(id), money=n=>'₹'+n.toLocaleString('en-IN');
+function renderCats(){const cats=['All',...new Set(products.map(p=>p.cat))];$('cats').innerHTML=cats.map(c=>`<button class="${c===category?'active':''}" data-cat="${c}">${c}</button>`).join('');document.querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>{category=b.dataset.cat;renderCats();renderProducts()})}
+function renderProducts(){let q=$('search').value.toLowerCase();let list=products.filter(p=>(category==='All'||p.cat===category)&&p.name.toLowerCase().includes(q));const sort=$('sort').value;if(sort==='low')list.sort((a,b)=>a.price-b.price);if(sort==='high')list.sort((a,b)=>b.price-a.price);if(sort==='rating')list.sort((a,b)=>b.rating-a.rating);$('grid').innerHTML=list.map(p=>`<article class="card"><button class="wish" onclick="alert('Wishlist feature ready for expansion')">♡</button><div class="pic">${p.icon}</div><div class="info"><span class="tag">${p.cat.toUpperCase()}</span><div class="name">${p.name}</div><div class="rating">★ ${p.rating}</div><div class="price">${money(p.price)}</div><button class="add" onclick="add(${p.id})">Add to cart</button></div></article>`).join('');$('title').textContent=q?`Results for “${$('search').value}”`:category==='All'?'Trending products':category+' products'}
+function add(id){const found=cart.find(x=>x.id===id);found?found.qty++:cart.push({id,qty:1});save();openCart()}
+function save(){localStorage.setItem('novamart-cart',JSON.stringify(cart));renderCart()}
+function renderCart(){let total=0;$('items').innerHTML=cart.length?cart.map(x=>{let p=products.find(y=>y.id===x.id);total+=p.price*x.qty;return `<div class="item"><div class="itemPic">${p.icon}</div><div class="itemInfo"><strong>${p.name}</strong><div>${money(p.price)} × ${x.qty}</div><div class="qty"><button onclick="change(${p.id},-1)">−</button>${x.qty}<button onclick="change(${p.id},1)">+</button></div></div></div>`}).join(''):'<p style="color:#6b7280;text-align:center;padding:50px 0">Your cart is empty.</p>';$('subtotal').textContent=money(total);$('count').textContent=cart.reduce((s,x)=>s+x.qty,0)}
+function change(id,n){let x=cart.find(y=>y.id===id);if(!x)return;x.qty+=n;if(x.qty<=0)cart=cart.filter(y=>y.id!==id);save()}
+function openCart(){$('drawer').classList.add('open');$('overlay').classList.add('show')};function closeCart(){$('drawer').classList.remove('open');$('overlay').classList.remove('show')}
+$('cart').onclick=openCart;$('close').onclick=closeCart;$('overlay').onclick=closeCart;$('searchBtn').onclick=renderProducts;$('search').oninput=renderProducts;$('sort').onchange=renderProducts;$('shop').onclick=()=>document.querySelector('.products').scrollIntoView({behavior:'smooth'});$('account').onclick=()=>alert('Account area can be connected to Supabase/Firebase later. No passwords are stored here.');$('wish').onclick=()=>alert('Wishlist area is ready for the next module.');$('checkout').onclick=()=>alert(cart.length?'Checkout module is ready to be connected to a payment provider.':'Your cart is empty.');renderCats();renderProducts();renderCart();
